@@ -228,6 +228,7 @@ function renderPosts(posts) {
 // 投稿の読み込み
 function loadPosts() {
     const sortOrder = $('#sortOrder').val();
+    const searchKeyword = $('#searchInput').val().toLowerCase();
     $('#loadingSpinner').show();
 
     // 既存のリスナーを解除
@@ -246,14 +247,22 @@ function loadPosts() {
             });
         });
 
+        let filteredPosts = posts;
+        if (searchKeyword) {
+            filteredPosts = posts.filter(post => {
+                const content = post.content ? post.content.toLowerCase() : '';
+                const author = post.author ? post.author.toLowerCase() : '';
+                return content.includes(searchKeyword) || author.includes(searchKeyword);
+            });
+        }
         // 並び順の適用
         if (sortOrder === 'newest') {
-            posts.sort((a, b) => b.timestamp - a.timestamp);
+            filteredPosts.sort((a, b) => b.timestamp - a.timestamp);
         } else {
-            posts.sort((a, b) => a.timestamp - b.timestamp);
+            filteredPosts.sort((a, b) => a.timestamp - b.timestamp);
         }
 
-        renderPosts(posts);
+        renderPosts(filteredPosts);
         $('#loadingSpinner').hide();
     }, (error) => {
         console.error('Data fetch error:', error);
@@ -500,6 +509,7 @@ $(function() {
 
     $('#logoutButton').on('click', logout);
 
+    $('#searchInput').on('input', loadPosts);
     // 投稿一覧表示順序選択
     $('#sortOrder').on('change', loadPosts);
 
@@ -565,6 +575,10 @@ window.addEventListener('unload', () => {
         <div class="posts-container">
             <h2>投稿一覧</h2>
             <div class="posts-control">
+                <div class="form-group">
+                    <input type="text" id="searchInput" class="form-control" 
+                   placeholder="キーワードで検索...">
+                </div>
                 <select id="sortOrder" class="form-control">
                     <option value="newest">新しい順</option>
                     <option value="oldest">古い順</option>
